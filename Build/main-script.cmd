@@ -1,10 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
+title ESET Offline Reset Tool v5.0
 
 :: =================================================================
 :: ESET Offline Reset Management Tool - v5.0 (Base64 Method)
-:: =================================================================
-:: Automates WinRE Reset with Base64 embedded payload
 :: =================================================================
 
 :: --- Configuration ---
@@ -13,34 +12,36 @@ set PAYLOAD_FILENAME=Offline-Reset.cmd
 set PAYLOAD_B64_TEMP=%TEMP%\payload.b64
 set LOGFILE=%~dp0ESET_Reset_Tool.log
 set PARENT_SCRIPT=%~f0
+set "REG_HINT=HKLM\SOFTWARE\ESETReset"
+set "LOG_PATH=%~dp0ESET_Reset_Tool.log"
 
-:: -----------------------------------------------------------------
-:: UAC Check: Re-launch as Administrator if needed 
-:: -----------------------------------------------------------------
->nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
-if '%errorlevel%' NEQ '0' (
-    echo Requesting administrative privileges...
-    powershell -Command "Start-Process '%~s0' -ArgumentList '%*' -Verb RunAs"
-    exit /B
+:: Fast UAC Check using fsutil
+>nul 2>&1 fsutil dirty query %systemdrive%
+if errorlevel 1 (
+    echo.
+    echo  Requesting administrator privileges...
+    if "%*"=="" (
+        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    ) else (
+        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList \"%*\" -Verb RunAs"
+    )
+    exit /b
 )
-
 :gotAdmin
 pushd "%~dp0"
 
-:: -----------------------------------------------------------------
 :: --disarm flag handler
-:: -----------------------------------------------------------------
 if /I "%~1"=="--disarm" (
-    echo [INFO]  --disarm flag detected – running DISARM routine …
+    echo [INFO]  --disarm flag detected >> "%LOGFILE%"
+    echo  Disarm mode - Restoring defaults...
     set "NONINTERACTIVE=1"
     goto :disable_reset
 )
 
-:: -----------------------------------------------------------------
 :: --arm flag handler
-:: -----------------------------------------------------------------
 if /I "%~1"=="--arm" (
-    echo [INFO]  --arm flag detected – running ARM routine …
+    echo  Arm mode - Configuring reset...
+    echo [INFO]  --arm flag detected >> "%LOGFILE%"
     set "NONINTERACTIVE=1"
     goto :enable_reset
 )
@@ -56,28 +57,29 @@ echo [INFO] Checking for BitLocker... >> "%LOGFILE%"
 manage-bde -status %SystemDrive% | find "Protection On" >nul
 if not errorlevel 1 (
     echo.
-    echo [WARN] BitLocker is ENABLED on your system drive.
+    echo  ==== BITLOCKER WARNING ====
     echo.
-    echo  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    echo  !!  You WILL LIKELY NEED your BitLocker Recovery Key to proceed  !!
-    echo  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    echo.
-    echo  Find your key at: https://account.microsoft.com/devices/recoverykey
+    echo  BitLocker is ENABLED. You'll need your recovery key.
+    echo  Get it at: https://account.microsoft.com/devices/recoverykey
     echo.
     pause
 )
 
 :menu
 cls
-echo =========================================
-echo   ESET Offline Reset Management Tool
-echo =========================================
+echo  ===============================================================
+echo                   ESET OFFLINE RESET TOOL
+echo                         Version 5.0
+echo  ===============================================================
 echo.
-echo  [1] ARM Auto-Reset on Next Reboot
-echo  [2] DISARM Auto-Reset
+echo  This tool configures Windows Recovery Environment to
+echo  automatically reset ESET on the next system restart.
+echo.
+echo  [1] Arm automatic reset
+echo  [2] Disarm automatic reset
 echo  [3] Exit
 echo.
-choice /C 123 /N /M "Please select an option: "
+choice /C 123 /N /M " Select: "
 if errorlevel 3 goto :eof
 if errorlevel 2 goto :disable_reset
 if errorlevel 1 goto :enable_reset
@@ -87,146 +89,142 @@ if errorlevel 1 goto :enable_reset
 cls
 echo [INFO] Arming reset process... >> "%LOGFILE%"
 
-:: Cleanup and prepare mount directory
+echo.
+echo  IMPORTANT: Close any file explorers and command prompts using %MOUNT_DIR% before continuing.
+echo.
+pause
 call :cleanup_mount
 
 echo.
-echo ==========================================
-echo IMPORTANT: Before proceeding, ensure that:
-echo - No command prompt/terminal windows are open in %MOUNT_DIR%
-echo - No Explorer windows are browsing %MOUNT_DIR%
-echo - No files from %MOUNT_DIR% are open in any applications
-echo ==========================================
+echo  Configuring automatic reset...
 echo.
-echo If dismount fails, manually run these commands:
-echo   reagentc /unmountre /path %MOUNT_DIR% /commit
-echo   rmdir /s /q %MOUNT_DIR%
-echo   dism /cleanup-wim
-echo.
-pause
-:enable_reset_flag
-echo.
-echo --- ARMING Auto-Reset --- 
-echo.
-echo One moment... (see ESET_Reset_Tool.log for details)
+echo  - Extracting payload...
 echo [INFO] Extracting payload from base64... >> "%LOGFILE%"
 call :extract_payload
 if errorlevel 1 (
-    echo [ERROR] Failed to extract payload. See log.
+    echo    FAILED - Check log file
     goto end_error
 )
 
+echo  - Mounting recovery image... be patient. Do not close window.
 echo [INFO] Mounting WinRE image... >> "%LOGFILE%"
 reagentc /mountre /path "%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
 if errorlevel 1 (
-    echo [ERROR] Failed to mount WinRE image. See log.
+    echo    FAILED - Check log file
     goto end_error
 )
 
+echo  - Backing up files...
 echo [INFO] Backing up original winpeshl.ini... >> "%LOGFILE%"
 if exist "%MOUNT_DIR%\Windows\System32\winpeshl.ini" (
-    copy "%MOUNT_DIR%\Windows\System32\winpeshl.ini" "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" >> "%LOGFILE%" 2>&1
+    if not exist "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" (
+        copy "%MOUNT_DIR%\Windows\System32\winpeshl.ini" "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" >nul
+    )
 )
 
+echo  - Installing payload...
 echo [INFO] Injecting payload script... >> "%LOGFILE%"
 copy "%TEMP%\%PAYLOAD_FILENAME%" "%MOUNT_DIR%\Windows\System32\%PAYLOAD_FILENAME%" >> "%LOGFILE%" 2>&1
 
+echo  - Recording log path...
+echo [INFO] Recording log path in registry... >> "%LOGFILE%"
+reg add "%REG_HINT%" /v "LogPath" /t REG_SZ /d "%LOG_PATH%" /f >> "%LOGFILE%" 2>&1
+
+echo  - Configuring startup...
 echo [INFO] Configuring WinRE startup... >> "%LOGFILE%"
 echo [LaunchApps] > "%MOUNT_DIR%\Windows\System32\winpeshl.ini"
 echo %%SystemRoot%%\System32\cmd.exe, /c %%SystemRoot%%\System32\%PAYLOAD_FILENAME% >> "%MOUNT_DIR%\Windows\System32\winpeshl.ini"
 
-echo [INFO] Committing and unmounting WinRE... >> "%LOGFILE%"
-reagentc /unmountre /path "%MOUNT_DIR%" /commit >> "%LOGFILE%" 2>&1
+echo  - Saving changes...
+echo [INFO] Committing changes to WinRE... >> "%LOGFILE%"
+Dism /Commit-Image /MountDir:"%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
 if errorlevel 1 (
-    echo [ERROR] Failed to unmount WinRE. This usually means files are still open. >> "%LOGFILE%"
-    echo.
-    echo ERROR: Dismount failed. This usually means files are still open.
-    echo Please close all applications and try these commands manually:
-    echo.
-    echo   reagentc /unmountre /path %MOUNT_DIR% /commit
-    echo   rmdir /s /q %MOUNT_DIR%
-    echo   dism /cleanup-wim
-    echo.
-    pause
+    echo [ERROR] Failed to commit WinRE changes >> "%LOGFILE%"
+    echo    FAILED - Files may be in use
     goto end_error
 )
 
-call :cleanup_mount
 del "%TEMP%\%PAYLOAD_FILENAME%" >nul 2>&1
 
 reagentc /boottore >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( echo [WARN] Could not set one-time boot to WinRE. See log. & goto end_error )
+if errorlevel 1 ( 
+    echo    WARNING - Could not set recovery boot
+)
 
+echo  - Creating cleanup task...
+echo [INFO] Creating Run-Once Scheduled Task >> "%LOGFILE%"
+schtasks /Create /TN "ESETResetDisarm" /TR "\"%~f0\" --disarm" /SC ONLOGON /RL HIGHEST /IT /RU "%USERNAME%" /F >nul 2>>"%LOGFILE%"
+
+powershell -NoLogo -NoProfile -Command "$t = Get-ScheduledTask -TaskName 'ESETResetDisarm'; $t.Settings.DisallowStartIfOnBatteries = $false; $t.Settings.StopIfGoingOnBatteries = $false; Set-ScheduledTask -TaskName 'ESETResetDisarm' -TaskPath '\' -Settings $t.Settings" >nul 2>>"%LOGFILE%"
+  
 echo.
-echo =================================================================
-echo SUCCESS: The ESET reset is ARMED.
-echo The script will run automatically the next time you restart.
-echo =================================================================
+echo  ==== SUCCESS ====
+echo.
+echo  ESET reset configured. It will run on next restart.
 echo.
 
 if defined NONINTERACTIVE (
-    echo [INFO] Non-interactive mode - automatic restart in 4 seconds... >> "%LOGFILE%"
-    shutdown /r /t 4 /c "Rebooting into recovery mode for ESET reset..."
+    echo [INFO] Auto-restart in 4 seconds... >> "%LOGFILE%"
+    shutdown /r /t 4 /c "Restarting for ESET reset..."
     goto :eof
 )
 
-choice /C YN /M "Do you want to reboot now?"
+choice /C YN /M " Restart now? "
 if errorlevel 2 goto :menu
-if errorlevel 1 shutdown /r /t 4 /c "Rebooting into recovery mode for ESET reset..."
+if errorlevel 1 shutdown /r /t 4 /c "Restarting for ESET reset..."
 goto :eof
 
 :: =================================================================
 :disable_reset
 cls
 echo.
-echo --- DISARMING Auto-Reset ---
+echo  Disabling automatic reset...
 echo.
-echo One moment... (see ESET_Reset_Tool.log for details)
+
 echo [INFO] Disarming reset process... >> "%LOGFILE%"
-echo [INFO] Preparing mount directory... >> "%LOGFILE%"
-if exist "%MOUNT_DIR%" (
-    rd /s /q "%MOUNT_DIR%" 2>nul
-    dism /cleanup-wim >> "%LOGFILE%" 2>&1
-)
-mkdir "%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
-
-echo [INFO] Mounting WinRE image for cleaning... >> "%LOGFILE%"
-reagentc /mountre /path "%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( 
-    echo [ERROR] Failed to mount WinRE image. See log. 
-    goto end_error 
-)
-
 if exist "%MOUNT_DIR%\Windows\System32\%PAYLOAD_FILENAME%" (
+    echo  - Removing payload...
     echo [INFO] Removing payload script... >> "%LOGFILE%"
-    del "%MOUNT_DIR%\Windows\System32\%PAYLOAD_FILENAME%"
-)
-if exist "%MOUNT_DIR%\Windows\System32\winpeshl.ini" (
-    echo [INFO] Removing startup override... >> "%LOGFILE%"
-    del "%MOUNT_DIR%\Windows\System32\winpeshl.ini"
-)
-if exist "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" (
-    echo [INFO] Restoring original winpeshl.ini... >> "%LOGFILE%"
-    move /y "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" "%MOUNT_DIR%\Windows\System32\winpeshl.ini" >> "%LOGFILE%" 2>&1
+    del "%MOUNT_DIR%\Windows\System32\%PAYLOAD_FILENAME%" >nul 2>&1
 )
 
+if exist "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" (
+    echo  - Restoring files...
+    echo [INFO] Restoring original winpeshl.ini... >> "%LOGFILE%"
+    copy /y "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" "%MOUNT_DIR%\Windows\System32\winpeshl.ini" >nul
+    del "%MOUNT_DIR%\Windows\System32\winpeshl.ini.backup" >nul
+)
+
+echo  - Cleaning registry...
+echo [INFO] Removing script location from registry... >> "%LOGFILE%"
+reg delete "%REG_HINT%" /f >> "%LOGFILE%" 2>&1
+
+echo  - Removing tasks...
+echo [INFO] Removing Scheduled Task... >> "%LOGFILE%"
+schtasks /delete /tn "ESETResetDisarm" /f >nul 2>&1
+
+echo  - Clearing recovery flag...
+echo [INFO] Clear Winre on next boot flag... >> "%LOGFILE%"
+reagentc /disable >> "%LOGFILE%" 2>&1
+reagentc /enable >> "%LOGFILE%" 2>&1 
+
+echo  - Unmounting image... be patient. Do not close window.
 echo [INFO] Committing cleanup and unmounting WinRE... >> "%LOGFILE%"
 reagentc /unmountre /path "%MOUNT_DIR%" /commit >> "%LOGFILE%" 2>&1
-
-rd /s /q "%MOUNT_DIR%" 2>nul
 dism /cleanup-wim >> "%LOGFILE%" 2>&1
+rd /s /q "%MOUNT_DIR%" 2>nul
 
 echo.
-echo =================================================================
-echo SUCCESS: The ESET auto-reset is DISABLED.
-echo WinRE has been restored to its default state.
-echo All autorun entries have been removed.
-echo =================================================================
+echo  ==== SUCCESS ====
+echo.
+echo  Automatic reset disabled. System restored to normal.
 echo.
 goto end_success
 
 :end_error
-echo An error occurred. Please check ESET_Reset_Tool.log for details.
+echo.
+echo  Operation failed. Check ESET_Reset_Tool.log for details.
+echo.
 if defined NONINTERACTIVE exit /b 1
 pause
 goto :menu
@@ -239,15 +237,7 @@ goto :menu
 :: =================================================================
 :cleanup_mount
 echo [INFO] Cleaning up mount directory... >> "%LOGFILE%"
-if exist "%MOUNT_DIR%" (
-    echo [INFO] Removing existing mount directory... >> "%LOGFILE%"
-    rmdir /s /q "%MOUNT_DIR%" 2>nul
-    if exist "%MOUNT_DIR%" (
-        echo [WARN] Could not remove mount directory, attempting cleanup... >> "%LOGFILE%"
-        dism /cleanup-wim >> "%LOGFILE%" 2>&1
-        rmdir /s /q "%MOUNT_DIR%" 2>nul
-    )
-)
+if exist "%MOUNT_DIR%" dism /cleanup-wim >> "%LOGFILE%" 2>&1
 dism /cleanup-wim >> "%LOGFILE%" 2>&1
 mkdir "%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
 goto :eof
@@ -260,6 +250,16 @@ echo [INFO] Creating base64 temp file... >> "%LOGFILE%"
 echo -----BEGIN CERTIFICATE----- > "%PAYLOAD_B64_TEMP%"
 echo BASE64_CONTENT_GOES_HERE >> "%PAYLOAD_B64_TEMP%"
 echo -----END CERTIFICATE----- >> "%PAYLOAD_B64_TEMP%"
+
+if exist "%TEMP%\%PAYLOAD_FILENAME%" (
+    echo [INFO] Removing existing payload file... >> "%LOGFILE%"
+    del /f "%TEMP%\%PAYLOAD_FILENAME%" >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] Could not remove existing payload file >> "%LOGFILE%"
+        del "%PAYLOAD_B64_TEMP%" >nul 2>&1
+        exit /b 1
+    )
+)
 
 echo [INFO] Decoding payload... >> "%LOGFILE%"
 certutil -decode "%PAYLOAD_B64_TEMP%" "%TEMP%\%PAYLOAD_FILENAME%" >> "%LOGFILE%" 2>&1
