@@ -49,7 +49,7 @@ ESET_Reset_Tool.cmd --disarm
 
 ## How It Works
 
-The tool automates modifies Windows Recovery Environment startup configuration to run a custom script before Windows loads. This script accesses the offline registry hive to remove ESET-specific entries, effectively resetting the product to an unactivated state.
+The tool modifies Windows Recovery Environment startup configuration to run a custom script before Windows loads. This script accesses the offline registry hive to remove ESET-specific entries, effectively resetting the product to an unactivated state.
 
 ## Troubleshooting
 
