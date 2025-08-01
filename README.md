@@ -12,7 +12,7 @@ This tool configures Windows Recovery Environment to automatically reset ESET on
 - Administrator privileges
 - ESET Security product installed
 - BitLocker recovery key (if BitLocker is enabled)
-- Bitlocker may have to to be disabled (may cause error during mount).
+- Bitlocker may have to to be disabled (may cause error during mount); even on machines where bitlocker was not explicitly enabled by the user. Microsoft is now enabling BitLocker device encryption by default in Windows 11, starting with the 24H2 update.
 
 ## Usage
 
