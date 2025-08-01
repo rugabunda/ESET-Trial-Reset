@@ -53,7 +53,7 @@ The tool automates modifies Windows Recovery Environment startup configuration t
 
 ## Troubleshooting
 
-If this app is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing such stale mount entries, but not user error. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; to fix, research the solution to dism/winreagentc error as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
+If this app is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing such stale mount entries, but not user error. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; to fix, research the solution to dism/winreagentc error code as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
 
 ## Roadmap
 
