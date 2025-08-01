@@ -11,7 +11,8 @@ This tool configures Windows Recovery Environment to automatically reset ESET on
 - Windows 10/11
 - Administrator privileges
 - ESET Security product installed
-- BitLocker recovery key (if BitLocker is enabled) / Bitlocker may have to to be disabled (may cause error during mount).
+- BitLocker recovery key (if BitLocker is enabled)
+- Bitlocker may have to to be disabled (may cause error during mount).
 
 ## Usage
 
