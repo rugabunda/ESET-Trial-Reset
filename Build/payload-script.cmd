@@ -187,7 +187,8 @@ call :Log "Unloading SOFTWARE hive..."
 reg unload HKLM\OFFLINE_SOFTWARE >nul 2>&1
 if errorlevel 1 (
     call :Log "[WARN] Failed to unload hive on first attempt, retrying..."
-    timeout /t 3 /nobreak >nul
+    echo WScript.Sleep 3000 >"%TEMP%\s3.vbs"
+    cscript //nologo "%TEMP%\s3.vbs"
     reg unload HKLM\OFFLINE_SOFTWARE >nul 2>&1
     if errorlevel 1 (
         call :Log "[ERROR] Failed to unload hive after retry - will remain loaded until restart"
