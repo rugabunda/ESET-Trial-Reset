@@ -54,7 +54,7 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
 
-Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini" Windows 11 default winpehl.ini contents:
+Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini". This script creates a backup as %MOUNT_DIR%\Windows\System32\winpeshl.ini.backup.  Windows 11 default winpehl.ini contents:
 
 [LaunchApp]
 
