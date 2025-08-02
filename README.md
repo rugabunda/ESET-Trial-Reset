@@ -2,14 +2,6 @@
 
 This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart.
 
-## Requirements
-
-- Windows 10/11
-- Administrator privileges
-- ESET Security product installed
-- BitLocker recovery key (if BitLocker is enabled)
-- Bitlocker may have to to be disabled (may cause error during mount); even on machines where bitlocker was not explicitly enabled by the user. Microsoft is now enabling BitLocker device encryption by default in Windows 11, starting with the 24H2 update.
-
 ## Usage
 
 ### Interactive Mode
@@ -33,11 +25,11 @@ ESET_Reset_Tool.cmd --disarm
    - Delete ESET license file
    - Remove ESET activation and configuration registry entries
 
-2. **Disarm Mode**: Removes the reset configuration and restores normal boot behavior
+2. **Disarm Mode**: Cleans and removes every trace of itself and restores normal WinRE behavior
 
 ## Important Notes
 
-⚠️ **WARNING**: This tool will reset ESET, requiring reactivation with a license key.
+⚠️ **WARNING**: This tool will reset ESET lisence.
 
 - All operations are logged to `ESET_Reset_Tool.log`
 - The system will automatically reboot after the reset process
@@ -57,7 +49,6 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini". This script creates a backup as %MOUNT_DIR%\Windows\System32\winpeshl.ini.backup.  Windows 11 default winpehl.ini contents:
 
 [LaunchApp]
-
 AppPath=X:\sources\recovery\recenv.exe
 
 
