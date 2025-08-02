@@ -54,7 +54,11 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 ## Troubleshooting
 
-If this app is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing such stale mount entries, but not user error. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; to fix, research the solution to dism/winreagentc error code as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
+1. If this app is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing such stale mount entries, but not user error. 
+
+2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
+
+3. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; Starting with Windows 24H2 Microsoft is enforcing bitlocker by default, to varying degrees, even if only by diskpart flags, which can break WinRE mounting. To fix, research the solution to winreagentc error code as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
 
 ## Roadmap
 
