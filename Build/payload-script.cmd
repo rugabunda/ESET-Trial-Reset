@@ -14,7 +14,6 @@ if exist "X:\Windows\System32\winpeshl.log" (
     echo [%date% %time%] === WinPE Shell Log Contents ====>>"%TEMP_LOGFILE%"
     type "X:\Windows\System32\winpeshl.log">>"%TEMP_LOGFILE%" 2>nul
     echo [%date% %time%] === End WinPE Shell Log ===>>"%TEMP_LOGFILE%"
-    echo.>>"%TEMP_LOGFILE%"
 )
 
 call :Log "=== WinRE Script Session Started ==="
@@ -31,6 +30,7 @@ for %%D in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
     if exist "%%D:\Windows\System32\Config\SOFTWARE" (
         set WINDRIVE=%%D:
         set WINDIR=%%D:\Windows
+        call :Log "Found Windows installation on: %%D:"
         goto :FoundInstallation
     )
 )
@@ -40,9 +40,6 @@ call :NoWindowsWarning "No Windows installation found on any drive"
 goto :EndScript
 
 :FoundInstallation
-call :Log "Found Windows installation on: %%D:"
-
-)
 call :Log "Selected Windows installation: %WINDIR%"
 
 :: Delete ESET license file
@@ -219,7 +216,7 @@ echo Registry Values Deleted: %OPS%
 echo.
 echo ESET will need to be reactivated when Windows boots.
 echo.
-echo Will reboot in 7 seconds...
+echo Rebooting in 7 seconds...
 
 :: Silent countdown
 for /L %%i in (7,-1,1) do (
@@ -229,9 +226,6 @@ for /L %%i in (7,-1,1) do (
 echo.
 echo Rebooting now...
 call :Log "Initiating system reboot..."
-
-:: Final dump before reboot
-call :DumpTempLog
 
 wpeutil reboot
 goto :EndScript
@@ -257,10 +251,10 @@ for /f "tokens=2,*" %%A in ('reg query "HKLM\OFFLINE_SOFTWARE\ESETReset" /v LogP
 if defined LOG_PATH (
     call :Log "Log path found: %LOG_PATH%"
     
-    :: Fix the path mapping - replace C: with detected drive
+    :: Path mapping - replace C: with detected drive
     set "MAIN_LOGFILE=%WINDRIVE%%LOG_PATH:~2%"
     
-    call :Log "Mapped to WinRE path: %MAIN_LOGFILE%"
+    call :Log "Log Mapped to WinRE path: !MAIN_LOGFILE!"
     
     :: Do initial dump
     call :DumpTempLog

@@ -1,9 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
-title ESET Offline Reset Tool v5.0
+title ESET Offline Reset Tool v0.2
 
 :: =================================================================
-:: ESET Offline Reset Management Tool - v5.0 (Base64 Method)
+:: ESET Offline Reset Management Tool - v0.2 (Base64 Method)
 :: =================================================================
 
 :: --- Configuration ---
@@ -69,7 +69,7 @@ if not errorlevel 1 (
 cls
 echo  ===============================================================
 echo                   ESET OFFLINE RESET TOOL
-echo                         Version 5.0
+echo                         Version 0.2
 echo  ===============================================================
 echo.
 echo  This tool configures Windows Recovery Environment to
@@ -88,11 +88,6 @@ if errorlevel 1 goto :enable_reset
 :enable_reset
 cls
 echo [INFO] Arming reset process... >> "%LOGFILE%"
-
-echo.
-echo  IMPORTANT: Close any file explorers and command prompts using %MOUNT_DIR% before continuing.
-echo.
-pause
 call :cleanup_mount
 
 echo.
