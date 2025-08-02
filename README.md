@@ -1,9 +1,5 @@
 # ESET Offline Reset Tool v0.2
 
-A Windows utility that resets ESET Security products by modifying registry entries through Windows Recovery Environment (WinRE).
-
-## Overview
-
 This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart.
 
 ## Requirements
@@ -54,7 +50,7 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 ## Troubleshooting
 
-1. If this app is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing such stale mount entries, but not user error. 
+1. If this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, but not user error. 
 
 2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
 
