@@ -54,6 +54,12 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
 
+Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini" Windows 11 default winpehl.ini contents:
+
+[LaunchApp]
+AppPath=X:\sources\recovery\recenv.exe
+
+
 3. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; Starting with Windows 24H2 Microsoft is enforcing bitlocker by default, to varying degrees, even if only by diskpart flags, which can break WinRE mounting. To fix, research the solution to winreagentc error code as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
 
 ## Roadmap
