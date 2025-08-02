@@ -224,7 +224,6 @@ goto :menu
 :: =================================================================
 :cleanup_mount
 echo [INFO] Cleaning up mount directory... >> "%LOGFILE%"
-if exist "%MOUNT_DIR%" dism /cleanup-wim >> "%LOGFILE%" 2>&1
 dism /cleanup-wim >> "%LOGFILE%" 2>&1
 mkdir "%MOUNT_DIR%" >> "%LOGFILE%" 2>&1
 goto :eof
