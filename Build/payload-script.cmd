@@ -204,9 +204,6 @@ call :Log "Target system: %WINDIR%"
 call :Log "Registry values deleted: %OPS%"
 call :Log "NOTE: ESET will need to be reactivated when Windows boots"
 
-:: Create the 1-second sleep utility
-echo WScript.Sleep 1000 >"%TEMP%\s.vbs"
-
 echo.
 echo ============================================
 echo          ESET RESET COMPLETED
@@ -219,10 +216,9 @@ echo ESET will need to be reactivated when Windows boots.
 echo.
 echo Rebooting in 7 seconds...
 
-:: Silent countdown
-for /L %%i in (7,-1,1) do (
-    cscript //nologo "%TEMP%\s.vbs"
-)
+:: 7-second delay
+echo WScript.Sleep 7000 >"%TEMP%\s7.vbs"
+cscript //nologo "%TEMP%\s7.vbs"
 
 echo.
 echo Rebooting now...
