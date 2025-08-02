@@ -11,23 +11,15 @@ set MOUNT_DIR=%SystemDrive%\WinRE_Mount
 set PAYLOAD_FILENAME=Offline-Reset.cmd
 set PAYLOAD_B64_TEMP=%TEMP%\payload.b64
 set LOGFILE=%~dp0ESET_Reset_Tool.log
-set PARENT_SCRIPT=%~f0
 set "REG_HINT=HKLM\SOFTWARE\ESETReset"
 set "LOG_PATH=%~dp0ESET_Reset_Tool.log"
 
-:: Fast UAC Check using fsutil
->nul 2>&1 fsutil dirty query %systemdrive%
-if errorlevel 1 (
-    echo.
-    echo  Requesting administrator privileges...
-    if "%*"=="" (
-        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-    ) else (
-        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList \"%*\" -Verb RunAs"
-    )
+:: Fast UAC Check
+>nul 2>&1 fsutil dirty query %systemdrive% || (
+    echo Requesting administrator privileges...
+    powershell -NoProfile -C "$p=@{FilePath='%~f0';Verb='RunAs'};if('%*'){$p['ArgumentList']='%*'};Start-Process @p"
     exit /b
 )
-:gotAdmin
 pushd "%~dp0"
 
 :: --disarm flag handler

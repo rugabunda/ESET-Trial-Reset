@@ -11,7 +11,6 @@ set MOUNT_DIR=%SystemDrive%\WinRE_Mount
 set PAYLOAD_FILENAME=Offline-Reset.cmd
 set PAYLOAD_B64_TEMP=%TEMP%\payload.b64
 set LOGFILE=%~dp0ESET_Reset_Tool.log
-set PARENT_SCRIPT=%~f0
 set "REG_HINT=HKLM\SOFTWARE\ESETReset"
 set "LOG_PATH=%~dp0ESET_Reset_Tool.log"
 
