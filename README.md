@@ -57,6 +57,7 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini" Windows 11 default winpehl.ini contents:
 
 [LaunchApp]
+
 AppPath=X:\sources\recovery\recenv.exe
 
 
