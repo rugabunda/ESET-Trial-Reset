@@ -1,9 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
-title ESET Offline Reset Tool v5.0
+title ESET Offline Reset Tool v0.2
 
 :: =================================================================
-:: ESET Offline Reset Management Tool - v5.0 (Base64 Method)
+:: ESET Offline Reset Management Tool - v0.2 (Base64 Method)
 :: =================================================================
 
 :: --- Configuration ---
