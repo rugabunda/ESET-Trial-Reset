@@ -1,4 +1,4 @@
-# ESET Offline Reset Tool v5.0
+# ESET Offline Reset Tool v0.3
 
 A Windows utility that resets ESET Security products by modifying registry entries through Windows Recovery Environment (WinRE).
 
