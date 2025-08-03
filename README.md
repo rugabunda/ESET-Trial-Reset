@@ -1,6 +1,6 @@
 # ESET Offline Reset Tool v0.2
 
-This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart. Eset offers a 30 trial after, and maintaining user settings.
+This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart. Eset offers a 30 trial on reboot, maintaining user settings.
 
 ## Usage
 
