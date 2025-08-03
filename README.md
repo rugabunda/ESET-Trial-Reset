@@ -1,6 +1,6 @@
 # ESET Offline Reset Tool v0.2
 
-This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart.
+This tool configures Windows Recovery Environment to automatically reset ESET on the next system restart. Eset offers a 30 trial after, and maintaining user settings.
 
 ## Usage
 
@@ -33,7 +33,6 @@ ESET_Reset_Tool.cmd --disarm
 
 - All operations are logged to `ESET_Reset_Tool.log`
 - The system will automatically reboot after the reset process
-- BitLocker users must have their recovery key ready
 - A scheduled task is created to automatically clean up after the reset
 
 ## How It Works
@@ -42,7 +41,7 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 ## Troubleshooting
 
-1. If this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, but not user error. 
+1. If this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, not user error. 
 
 2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
 
