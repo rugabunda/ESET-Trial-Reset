@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-echo ESET Registry Reset Script for WinPE/WinRE
+echo ESET Registry Reset Script for WinRE
 echo ==========================================
 wpeutil CreateConsole >nul 2>&1
 
@@ -8,6 +8,7 @@ wpeutil CreateConsole >nul 2>&1
 set TEMP_LOGFILE=X:\eset_reset.log
 set MAIN_LOGFILE=
 set NONINTERACTIVE=0
+set EXITCODE=0
 
 :: Capture WinPE shell log
 if exist "X:\Windows\System32\winpeshl.log" (
@@ -20,16 +21,16 @@ call :Log "=== WinRE Script Session Started ==="
 call :Log "ESET Registry Reset Script for WinPE/WinRE"
 
 :: Initialize variables
-set WINDRIVE=
-set WINDIR=
+set OFFLINE_WINDRIVE=
+set OFFLINE_WINDIR=
 
 :: Scan for Windows installation
 call :Log "Scanning for Windows installation..."
 
-for %%D in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+for %%D in (C D E F G H I J K L M N O P Q R S T U V W Y Z) do (
     if exist "%%D:\Windows\System32\Config\SOFTWARE" (
-        set WINDRIVE=%%D:
-        set WINDIR=%%D:\Windows
+        set OFFLINE_WINDRIVE=%%D:
+        set OFFLINE_WINDIR=%%D:\Windows
         call :Log "Found Windows installation on: %%D:"
         goto :FoundInstallation
     )
@@ -40,11 +41,11 @@ call :NoWindowsWarning "No Windows installation found on any drive"
 goto :EndScript
 
 :FoundInstallation
-call :Log "Selected Windows installation: %WINDIR%"
+call :Log "Selected Windows installation: %OFFLINE_WINDIR%"
 
 :: Delete ESET license file
 call :Log "Deleting ESET license file..."
-set LICENSEPATH=%WINDRIVE%\ProgramData\ESET\ESET Security\License\license.lf
+set LICENSEPATH=%OFFLINE_WINDRIVE%\ProgramData\ESET\ESET Security\License\license.lf
 if exist "%LICENSEPATH%" (
     attrib -r -h -s "%LICENSEPATH%" >nul 2>&1
     del /f "%LICENSEPATH%" >nul 2>&1
@@ -59,7 +60,7 @@ if exist "%LICENSEPATH%" (
 
 :: Load the SOFTWARE hive
 call :Log "Loading offline SOFTWARE hive..."
-reg load HKLM\OFFLINE_SOFTWARE "%WINDIR%\System32\Config\SOFTWARE" >nul 2>&1
+reg load HKLM\OFFLINE_SOFTWARE "%OFFLINE_WINDIR%\System32\Config\SOFTWARE" >nul 2>&1
 if errorlevel 1 (
     call :FatalError "Failed to load SOFTWARE hive"
 )
@@ -200,7 +201,7 @@ if errorlevel 1 (
 )
 
 call :Log "SUCCESS: ESET-Reset complete"
-call :Log "Target system: %WINDIR%"
+call :Log "Target system: %OFFLINE_WINDIR%"
 call :Log "Registry values deleted: %OPS%"
 call :Log "NOTE: ESET will need to be reactivated when Windows boots"
 
@@ -209,7 +210,7 @@ echo ============================================
 echo          ESET RESET COMPLETED
 echo ============================================
 echo.
-echo Target System: %WINDIR%
+echo Target System: %OFFLINE_WINDIR%
 echo Registry Values Deleted: %OPS%
 echo.
 echo ESET will need to be reactivated when Windows boots.
@@ -249,7 +250,7 @@ if defined LOG_PATH (
     call :Log "Log path found: %LOG_PATH%"
     
     :: Path mapping - replace C: with detected drive
-    set "MAIN_LOGFILE=%WINDRIVE%%LOG_PATH:~2%"
+    set "MAIN_LOGFILE=%OFFLINE_WINDRIVE%%LOG_PATH:~2%"
     
     call :Log "Log Mapped to WinRE path: !MAIN_LOGFILE!"
     
@@ -273,6 +274,7 @@ if defined MAIN_LOGFILE (
 goto :eof
 
 :FatalError
+set "EXITCODE=1"
 echo.
 call :Log "[FATAL] %*"
 echo.
@@ -298,23 +300,23 @@ echo ============================================
 echo.
 echo %*
 echo.
-echo Hey man. How did you pull his off? This script requires WINDOWS to be installed.
+echo Hey man. How did you pull this off? This script requires WINDOWS to be installed.
 echo.
 
 :: Countdown by printing a new line each second
 for /L %%i in (15,-1,1) do (
-    echo WINDOWS not detected. Rebooting in %%i seconds... Press Ctrl+C to Reboot.
+    echo WINDOWS not detected. Rebooting in %%i seconds... Press Ctrl+C to Reboot Now.
     cscript //nologo "%TEMP%\s.vbs"
 )
 
 echo.
 echo Rebooting now...
-call :Log "[FATAL] %*"
+call :Log "[FATAL] %*"  
 wpeutil reboot
-exit /b 1
+endlocal & set "EXITCODE=1" & exit /b 1
 
 :EndScript
 call :Log "================= WinRE Script Session Ended ================="
 :: Final dump
 call :DumpTempLog
-exit /b %errorlevel%
+exit /b %EXITCODE%
