@@ -15,7 +15,7 @@ ESET_Reset_Tool.cmd
 # Configure automatic reset on next reboot without user interation
 ESET_Reset_Tool.cmd --arm
 
-# Remove automatic reset configuration without user interaction (triggered automatically by --arm after reboot)
+# Remove automatic reset configuration without user interaction (triggered automatically by arm after reboot)
 ESET_Reset_Tool.cmd --disarm
 ```
 
@@ -41,9 +41,9 @@ The tool modifies Windows Recovery Environment startup configuration to run a cu
 
 ## Troubleshooting
 
-1. If this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, not user error. 
+1. Should not be a problem but if this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, not user error. 
 
-2. If disarm does not complete after arming, Windows Recovery Environment will be stuck loading the script. 
+2. Should not occur under normal circumstances, but if disarm does not complete after arming, attempts to load Windows Recovery Environment will continue loading the script. 
 
 Solution is to mount, restore, and commit the original contents of winre "%MOUNT_DIR%\Windows\System32\winpeshl.ini". This script creates a backup as %MOUNT_DIR%\Windows\System32\winpeshl.ini.backup.  Windows 11 default winpehl.ini contents:
 
