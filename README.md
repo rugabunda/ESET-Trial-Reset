@@ -76,8 +76,6 @@ Solution is to mount, restore, and commit the original contents of winre "%MOUNT
 AppPath=X:\sources\recovery\recenv.exe
 
 
-3. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; Starting with Windows 24H2 Microsoft is enforcing bitlocker by default, to varying degrees, even if only by diskpart flags, which can break WinRE mounting. To fix, research the solution to winreagentc error code as it relates to bitlocker. More info: https://www.perplexity.ai/search/can-winre-be-mounted-while-usi-A0xGs_XQRnmeuXq.jwALWw
+3. Errors may occur while arming/mounting winre if bitlocker is partially or fully enabled; Starting with Windows 24H2 Microsoft is enforcing bitlocker by default, to varying degrees, even if only by diskpart flags, which can break WinRE mounting. To fix, research the solution to winreagentc error code as it relates to bitlocker.
 
-## Roadmap
 
-UI free Silent --arm and or --disarm install.
