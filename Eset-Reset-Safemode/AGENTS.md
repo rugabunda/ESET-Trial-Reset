@@ -1,8 +1,8 @@
 # AGENTS.md — ESET SafeMode Reset: success-reporting protocol
 
-> Purpose: every test run (human or agent) appends here so we converge on the
-> **exact steps that work**. No "it worked" without evidence. See `info.md` for
-> root-cause analysis and `ESET_Reset.bat` (the ONLY script under test).
+> Purpose: every test run records the `RESULT:` line + evidence so we converge
+> on the **exact steps that work**. No "it worked" without evidence. See `info.md`
+> for root-cause analysis and `ESET_Reset.bat` (the ONLY script under test).
 
 ## 1. Ground rules for agents
 
@@ -13,7 +13,7 @@
 - **Log-or-it-didn't-happen:** every attempt must record the items in §3.
   Paste the `RESULT:` line verbatim plus the log path.
 - **Don't "fix forward" blindly:** one change per iteration (batch edit +
-  note the diff in the Attempts table). If a run fails, file it as FAILED with
+  note the diff vs. the previous version). If a run fails, file it as FAILED with
   evidence — do not overwrite history.
 - **Safe commands only in NORMAL mode:** `/STATUS`, `/TEST`, `/UNARM` change
   nothing irreversible. ARM (`ESET_Reset.bat` with no args) triggers a reboot —
@@ -52,21 +52,9 @@ Status definitions:
   gone, reg values gone, auto-return to normal mode, persists after reboot).
 - **PARTIAL** = script ran + logged, but some FAIL remains (list value names).
 - **FAILED** = reboot loop, stuck in SafeMode, RunOnce "file not found", or
-  window closed with no log — attach what *was* observed.
+   window closed with no log — attach what *was* observed.
 
-## 4. Attempts log
-
-| N | Date | Mode | RESULT (OK/FAIL/MISS, file) | Outcome | Notes / diff |
-|---|------|------|------------------------------|---------|--------------|
-| 1 | 2026-10-12 | — | — | PENDING | Baseline: single-file rewrite + `head`-fix; awaiting first `/STATUS` + `/TEST` on target machine. Old scripts archived to `old\`. |
-| 2 | 2026-10-11 22:36 | ARM→/CLEANUP (SafeMode minimal) | `reg OK=22 FAIL=0 MISSING=7 file OK=1 FAIL=0` | SUCCESS | Script worked end-to-end (0 FAIL, auto-return to normal, no stale RunOnce). ESET re-activated online ~3 min later as expected (not a script issue): `license.lf` recreated 22:39, `UniqueId/WebSeatId/.../LastActivationResult=success ... 22:38:26` back under `CurrentVersion\Info`. Stayed deleted: `EditionName, FullProductName, InstalledByERA`. 7 MISS (never existed here): `DNSTimerSec, Token, LastHwf, LegacyUsername, LegacyPassword, LastHwInfo\{ComputerName,Version}`. Log archived: `logs\cleanup-20261011-2236-SUCCESS.log` (= `C:\ESET_Reset\cleanup.log`). Cosmetic bug found: false `[WARN] NOT running as admin` (deletes still succeeded) — `net session` needs Server service, absent in SafeMode. Fixed next version via `:IsAdmin` (whoami High-Integrity SID). |
-| 3 | 2026-10-11 22:48 | ARM (non-elevated cmd) | — (no RESULT; ARM log shows `Access is denied`) | FAILED | Two bugs in one: (a) `call :NeedAdmin` → `The system cannot find the batch label specified - NeedAdmin`, then the non-elevated instance carried on anyway (staged OK, `bcdedit /set` → Access denied, junk ARM entries 22:48:51/22:49:01 in log). Root cause of (a): `ESET_Reset.bat` was saved with LF-only line endings (Write tool default) — cmd.exe label lookup needs CRLF. Verified: file had LF=352 CR=0. Fix v3: converted to CRLF (LF=358 CR=358), and `:NeedAdmin` now kills the non-elevated instance (`exit`) after spawning the elevated copy — per rule "if not elevated it does nothing". Verified: `ESET_Reset.bat /STATUS` from non-elevated shell prints `[*] Not elevated - relaunching...` with no label error. Staged copy re-synced. |
-| 4 | — | — | — | PENDING | v2 service-stop quieting + v3 NeedAdmin/CRLF fix bundled; needs one `/TEST` (elevated) then next ARM to confirm clean logs. |
-| 5 | — | — | — | PENDING | v4: `:IsAdmin` now `fsutil dirty query` primary + whoami fallback, `net session` dropped (per review of fsutil idiom — faster, no Server-service dependency). CRLF re-verified (361/361), staged re-synced. Not executed (this shell is non-elevated; no UAC popped). |
-| 6 | — | — | — | PENDING | v5: CLEANUP reboot `shutdown /r /t 30` → `/r /f /t 5` (forced, 5s abort window still via `shutdown /a`). ARM reboot stays `/t 10`. CRLF 361/361, staged re-synced. |
-| | | | | | *(append rows below; newest at bottom)* |
-
-## 5. Exact steps that work (script runs clean; ESET reactivates after)
+## 4. Exact steps that work (script runs clean; ESET reactivates after)
 
 ```text
 WORKING RECIPE (verified 2026-10-11, ESET NOD32 Antivirus 19.2.10.0):
@@ -81,7 +69,7 @@ next test should run with network disconnected and compare /STATUS before→afte
    (EditionName/FullProductName/InstalledByERA gone) vs re-created.
 ```
 
-## 6. Quick command reference
+## 5. Quick command reference
 
 ```cmd
 :: always from an elevated prompt, repo folder:
