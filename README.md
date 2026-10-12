@@ -39,6 +39,31 @@ ESET_Reset_Tool.cmd --disarm
 
 The tool modifies Windows Recovery Environment startup configuration to run a custom script before Windows loads. This script accesses the offline registry hive to remove ESET-specific entries, effectively resetting the product to an unactivated state.
 
+## ESET SafeMode Reset (Alternative)
+
+Runs the same reset from Safe Mode instead of WinRE. It is faster than the WinRE
+method and useful as a fallback if WinRE mounting fails (or vice versa) — the two
+are complementary.
+
+### Usage
+```batch
+# Dry run in normal mode (no reboot, no bcdedit change)
+Eset-Reset-Safemode\ESET_Reset.bat /TEST
+
+# Arm: reboot to Safe Mode, auto-cleanup, then reboot to normal
+Eset-Reset-Safemode\ESET_Reset.bat
+
+# Cancel a pending reset
+Eset-Reset-Safemode\ESET_Reset.bat /UNARM
+```
+
+### What It Does
+- **Arm**: stages a copy to `C:\ESET_Reset`, sets `safeboot minimal`, registers a
+  `RunOnce` cleanup entry, and reboots to Safe Mode.
+- **Clean**: in Safe Mode it deletes `license.lf` and 30 ESET registry values,
+  clears the safeboot flag, and reboots to normal mode.
+- **Safe commands**: `/TEST` (dry run), `/STATUS` and `/UNARM` are non-destructive.
+
 ## Troubleshooting
 
 1. Should not be a problem but if this script is interrupted during mounting/dismounting phase or the mounted folders are open in any application during mounting and or unmounting phases it may cause potential errors. This app is designed to automate the process of fixing resulting stale mount entries, not user error. 
